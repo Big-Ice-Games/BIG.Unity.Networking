@@ -21,7 +21,7 @@ Package Manager > `+` > `Install package from git URL`, in this order:
 https://github.com/Big-Ice-Games/BIG.Unity.git
 ```
 ```
-https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet
+https://github.com/Big-Ice-Games/FishNet.git?path=Assets/FishNet#big
 ```
 ```
 https://github.com/Big-Ice-Games/BIG.Unity.Networking.git
@@ -29,6 +29,11 @@ https://github.com/Big-Ice-Games/BIG.Unity.Networking.git
 
 FishNet must be installed as a package (not imported from the Asset Store into `Assets/`) — until it is,
 this package does not compile and the console tells you what is missing.
+
+FishNet comes from the Big Ice Games fork (branch `big`): upstream FishNet plus a codegen fix that makes it load
+on Unity 7 / CoreCLR (overrides of `[MakePublic]` methods were left narrower than their base — Mono tolerated it,
+CoreCLR throws `TypeLoadException` on startup). On Unity 6 the upstream URL works as well:
+`https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet`.
 
 ## Setup
 
@@ -90,6 +95,45 @@ NetworkSession.Instance.Players.TryGet(id, out p);  // by stable PlayerId
   from the transport when it can vouch for it (Steam) and from the claim otherwise (LAN).
 * `PlayerSpawner` spawns once per `PlayerId` when the player is identified AND has loaded the start scenes;
   a reconnecting player gets their object back. The owner always comes from the server's connection.
+
+## Voice chat (`BIG.Unity.Networking.Voice`)
+
+Proximity voice and walkie-talkies over the same FishNet session — no extra service. Opus (managed
+[Concentus](https://github.com/lostromb/concentus), shipped in `Plugins/`) at 48 kHz mono, 20 ms frames, ~24 kbps per
+speaker, unreliable channel, in-band FEC + packet loss concealment, adaptive jitter buffer.
+
+```
+owner: MicrophoneInput → 48 kHz → gate (Off / PushToTalk / Open+VAD, or radio button) → Opus → ServerRpc
+host:  relays to every other player (never back to the speaker), raises PlayerSpoke (BIG event, AI hook)
+others: jitter buffer → decode → VoiceEmitter on the head (3D)
+        radio frames also → every VoiceRadio on the frequency (filtered, delayed, squelch)
+```
+
+Setup on the player prefab:
+1. **VoiceSettings** asset (*Create > BIG > Networking > Voice Settings*) — bitrate, VAD, jitter buffer, distances,
+   radio delay/filter/squelch. Tune it live in play mode.
+2. **VoiceSpeaker** next to `NetworkPlayer` — assign the settings and the mouth emitter.
+3. Child "Mouth" with **VoiceEmitter** (profile *Proximity*). Set the AudioSource *Output* to your voice mixer group
+   (e.g. Sonity's `voice`).
+4. Walkie-talkie: child/item with **VoiceEmitter** (profile *Radio*) + **VoiceRadio** (frequency, on/off). Its holder
+   defaults to the parent player (own transmissions don't come out of the own radio).
+
+Game code:
+```csharp
+microphone.PushToTalkPressed = input.PushToTalk;     // MicrophoneInput from BIG.Unity (mode Off / PushToTalk / Open)
+speaker.RadioTransmitting = input.RadioHeld;         // heard nearby AND through radios on speaker.RadioFrequency
+speaker.Muted = true; speaker.Volume = 0.5f;         // per player, persisted by PlayerId
+
+[Subscribe] private void OnSpoke(PlayerSpoke e) { /* server: monsters hear e.Loudness at e.Position */ }
+speaker.FrameAvailable += (s, pcm48k, level) => { /* copy frames to record a voice (mimic) */ };
+```
+
+Privacy: with `TransmitOnlyWhenFocused` (default on) nothing is sent while the game window isn't focused — incoming
+voice keeps playing (keep *Run In Background* on in Player Settings). `speaker.BlockedByFocus` tells the UI.
+
+Testing: the LAN test scene builder (dev project) adds voice to the test player — **V** push-to-talk,
+**R** walkie-talkie, **M** cycle mic mode. Two instances on one PC share the microphone — only the focused window
+transmits, so click into the window you want to talk from.
 
 ## Writing a provider
 

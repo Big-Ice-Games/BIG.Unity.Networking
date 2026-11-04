@@ -12,7 +12,7 @@ namespace BIG.Unity.Networking.Editor
     internal static class NetworkingDependencyChecker
     {
         private const string FISHNET_PACKAGE = "com.firstgeargames.fishnet";
-        private const string FISHNET_URL = "https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet";
+        private const string FISHNET_URL = "https://github.com/Big-Ice-Games/FishNet.git?path=Assets/FishNet#big";
 
         static NetworkingDependencyChecker()
         {
