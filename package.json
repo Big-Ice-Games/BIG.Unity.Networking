@@ -1,0 +1,20 @@
+{
+  "name": "com.bigicegames.big.unity.networking",
+  "version": "0.1.0",
+  "displayName": "BIG.Unity.Networking",
+  "description": "Co-op networking toolkit of the BIG ecosystem on top of FishNet: swappable platform/session layer (LAN now, Steam and EOS next), race-free session flow, stable player identities and an idempotent player spawner. REQUIRES BIG.Unity and FishNet (free).",
+  "unity": "2022.3",
+  "license": "MIT",
+  "dependencies": {},
+  "author": {
+    "name": "BigIceGames"
+  },
+  "keywords": [
+    "big",
+    "networking",
+    "fishnet",
+    "coop",
+    "lan",
+    "steam"
+  ]
+}
