@@ -20,7 +20,7 @@ namespace BIG.Unity.Networking.Lan
         private const string PROVIDER = "LAN";
         private const string JOIN_ARGUMENT = "-big-join";
         private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("BIGL");
-        private const byte FORMAT = 1;
+        private const byte FORMAT = 2; // 2: + room data entries (open flag...).
 
         private readonly LanNetworkProvider _settings;
         private readonly LanPlatform _platform;
@@ -135,9 +135,32 @@ namespace BIG.Unity.Networking.Lan
             if (IsOwner) Current.Joinable = joinable;
         }
 
+        public void SetVisibility(SessionVisibility visibility)
+        {
+            if (!IsOwner) return;
+            Current.Visibility = visibility;
+
+            // LAN: Private = no beacon (join by address only); FriendsOnly behaves like Public (no friends on LAN).
+            if (visibility == SessionVisibility.Private)
+            {
+                _beaconSocket?.Close();
+                _beaconSocket = null;
+            }
+            else if (_beaconSocket == null)
+            {
+                _beaconSocket = new UdpClient { EnableBroadcast = true };
+                _nextBeacon = 0f;
+            }
+        }
+
         public void SetData(string key, string value)
         {
             if (IsOwner) Current.Data[key] = value;
+        }
+
+        public void SetName(string name)
+        {
+            if (IsOwner) Current.Name = name; // The beacon carries it.
         }
 
         public void SetMemberCount(int count)
@@ -147,6 +170,27 @@ namespace BIG.Unity.Networking.Lan
 
         public void Invite(PlayerId friend) =>
             this.Log("[Network] LAN has no invites — share the host address or use Search().", LogLevel.Warning);
+
+        /// <summary> LAN rooms are just the host's beacon: the successor starts its own (same name, its address). </summary>
+        public void SetHost(PlayerId newHost)
+        {
+            if (Current == null) return;
+
+            _beaconSocket?.Close();
+            _beaconSocket = null;
+            Current.Data.Remove(SessionInfo.HOST_ADDRESS_KEY); // Beacon waits until the new host is reachable.
+            Current.Owner = newHost;
+
+            if (newHost != _platform.LocalPlayer) return;
+
+            _sessionId = Guid.NewGuid().ToString("N");
+            Current.Address = new SessionAddress(PROVIDER, $"{LanProvider.GetLocalIPv4()}:{_settings.GamePort}");
+            if (Current.Visibility != SessionVisibility.Private)
+            {
+                _beaconSocket = new UdpClient { EnableBroadcast = true };
+                _nextBeacon = 0f;
+            }
+        }
 
         #endregion
 
@@ -202,6 +246,18 @@ namespace BIG.Unity.Networking.Lan
             writer.Write((byte)Current.MaxPlayers);
             writer.Write(Current.Joinable);
             writer.Write(NetworkVersion.Current);
+
+            // Room data (open flag...) — host address and version travel above.
+            int extra = 0;
+            foreach (var entry in Current.Data)
+                if (entry.Key != SessionInfo.HOST_ADDRESS_KEY && entry.Key != SessionInfo.VERSION_KEY) extra++;
+            writer.Write((byte)Math.Min(extra, 255));
+            foreach (var entry in Current.Data)
+            {
+                if (entry.Key == SessionInfo.HOST_ADDRESS_KEY || entry.Key == SessionInfo.VERSION_KEY || extra-- <= 0) continue;
+                writer.Write(entry.Key);
+                writer.Write(entry.Value ?? "");
+            }
             return stream.ToArray();
         }
 
@@ -264,6 +320,9 @@ namespace BIG.Unity.Networking.Lan
                 };
                 info.Data[SessionInfo.HOST_ADDRESS_KEY] = hostAddress;
                 info.Data[SessionInfo.VERSION_KEY] = reader.ReadString();
+                int entries = reader.ReadByte();
+                for (int i = 0; i < entries; i++)
+                    info.Data[reader.ReadString()] = reader.ReadString();
 
                 // Same host heard via broadcast AND loopback — keep the first, it's reachable either way.
                 if (!_found.ContainsKey(sessionId))

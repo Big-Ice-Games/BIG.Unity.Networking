@@ -59,7 +59,7 @@ namespace BIG.Unity.Networking
     public static class NetworkVersion
     {
         /// <summary> Bump when the network protocol of the PLUGIN changes incompatibly. </summary>
-        public const int PROTOCOL = 1;
+        public const int PROTOCOL = 3; // 2: hello carries the host-migration address. 3: + room password.
 
         /// <summary> Game version + plugin protocol. Override <see cref="GameVersion"/> to decouple from Application.version. </summary>
         public static string Current => $"{GameVersion}/{PROTOCOL}";

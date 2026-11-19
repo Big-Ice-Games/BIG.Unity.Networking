@@ -1,0 +1,28 @@
+{
+    "name": "BIG.Unity.Networking.Editor.Tools",
+    "rootNamespace": "BIG.Unity.Networking.Editor",
+    "references": [
+        "BIG.Unity",
+        "BIG.Unity.Networking",
+        "FishNet.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "BIG_FISHNET"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.firstgeargames.fishnet",
+            "expression": "",
+            "define": "BIG_FISHNET"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -19,6 +19,8 @@ namespace BIG.Unity.Networking
         public int MaxPlayers = 4;
         public SessionVisibility Visibility = SessionVisibility.FriendsOnly;
         public bool Joinable = true;
+        /// <summary> Empty = open. Set = joiners must give it (<see cref="NetworkSession.Join(SessionAddress, string)"/>). Never published. </summary>
+        public string Password = "";
     }
 
     /// <summary> Opaque address of a room, meaningful only to the provider that produced it. </summary>
@@ -49,6 +51,10 @@ namespace BIG.Unity.Networking
         public const string HOST_ADDRESS_KEY = "big.host";
         /// <summary> Data key with <see cref="NetworkVersion.Current"/> of the host. </summary>
         public const string VERSION_KEY = "big.version";
+        /// <summary> Data key: "0" while a running match doesn't take new players (set by <see cref="NetworkLobby"/>). </summary>
+        public const string OPEN_KEY = "big.open";
+        /// <summary> Data key: "1" when the room has a password (the password itself is never published). </summary>
+        public const string LOCKED_KEY = "big.locked";
 
         public SessionAddress Address;
         public string Name = "";
@@ -62,6 +68,12 @@ namespace BIG.Unity.Networking
         public string HostAddress => Data.TryGetValue(HOST_ADDRESS_KEY, out var value) ? value : "";
         public string Version => Data.TryGetValue(VERSION_KEY, out var value) ? value : "";
         public bool IsFull => MaxPlayers > 0 && MemberCount >= MaxPlayers;
+        /// <summary> A NEW player can get in now: joinable, not full, and not a running match closed to newcomers. </summary>
+        public bool IsOpenForNewPlayers => Joinable && !IsFull && !(Data.TryGetValue(OPEN_KEY, out var open) && open == "0");
+        /// <summary> A running match that only takes players who were already in it (room still joinable for them). </summary>
+        public bool IsMatchInProgress => Data.TryGetValue(OPEN_KEY, out var open) && open == "0";
+        /// <summary> Needs a password to join. </summary>
+        public bool IsLocked => Data.TryGetValue(LOCKED_KEY, out var locked) && locked == "1";
     }
 
     public enum SessionError
@@ -112,12 +124,23 @@ namespace BIG.Unity.Networking
 
         /// <summary> Owner only. Hub = joinable, mission = not. </summary>
         void SetJoinable(bool joinable);
+        /// <summary> Owner only. Turn a private party into a public room (or back) without recreating it. </summary>
+        void SetVisibility(SessionVisibility visibility);
         /// <summary> Owner only. Public room data visible before joining. </summary>
         void SetData(string key, string value);
+        /// <summary> Owner only. Room name shown in search results. </summary>
+        void SetName(string name);
         /// <summary> Owner only. Current number of players — published in search results. </summary>
         void SetMemberCount(int count);
 
         void Invite(PlayerId friend);
+
+        /// <summary>
+        /// Host migration, called on every machine that stays: <paramref name="newHost"/> (maybe this machine) hosts the room
+        /// from now on. The room is kept — no Leave/Join. When it's this machine, owner calls (SetData...) must work once
+        /// the platform agrees (queue them until then); the machine that owns the room at platform level hands it over.
+        /// </summary>
+        void SetHost(PlayerId newHost);
 
         /// <summary> The player accepted an invite (overlay, launch argument...) — the session should join it. </summary>
         event Action<SessionAddress> JoinRequested;

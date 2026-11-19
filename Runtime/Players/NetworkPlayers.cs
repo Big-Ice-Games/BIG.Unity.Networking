@@ -13,6 +13,10 @@ namespace BIG.Unity.Networking
         public string PlayerId;
         public string DisplayName;
         public string Version;
+        /// <summary> Where others reach this player if it becomes the host (host migration). </summary>
+        public string HostAddress;
+        /// <summary> Room password the player typed (or got told) — checked by the host when the room is locked. </summary>
+        public string Password;
     }
 
     /// <summary>
@@ -27,22 +31,26 @@ namespace BIG.Unity.Networking
     {
         public readonly struct Identity
         {
-            public Identity(NetworkConnection connection, PlayerId playerId, string displayName)
+            public Identity(NetworkConnection connection, PlayerId playerId, string displayName, string hostAddress)
             {
                 Connection = connection;
                 PlayerId = playerId;
                 DisplayName = displayName;
+                HostAddress = hostAddress;
             }
 
             public readonly NetworkConnection Connection;
             public readonly PlayerId PlayerId;
             public readonly string DisplayName;
+            /// <summary> The player's own claim — where to reach it should it take over hosting. </summary>
+            public readonly string HostAddress;
         }
 
         private readonly NetworkSession _session;
         private readonly Dictionary<PlayerId, NetworkPlayer> _players = new Dictionary<PlayerId, NetworkPlayer>();
         private readonly Dictionary<int, Identity> _identitiesByConnection = new Dictionary<int, Identity>();
         private readonly Dictionary<PlayerId, Identity> _identitiesByPlayer = new Dictionary<PlayerId, Identity>();
+        private readonly Dictionary<int, PlayerId> _playerIdsByClient = new Dictionary<int, PlayerId>();
 
         /// <summary> Spawned players on this machine (host included). </summary>
         public IReadOnlyCollection<NetworkPlayer> All => _players.Values;
@@ -58,6 +66,13 @@ namespace BIG.Unity.Networking
         /// <summary> Server: an identified connection dropped. </summary>
         public event Action<Identity> ServerPlayerDisconnected;
 
+        /// <summary>
+        /// Server: decides whether an identified player may stay (bans, match in progress...). Return
+        /// <see cref="DisconnectReason.None"/> to admit; anything else is sent to the player and they're disconnected.
+        /// <see cref="NetworkLobby"/> installs its <see cref="LobbyRules"/> here.
+        /// </summary>
+        public Func<PlayerId, DisconnectReason> ServerAdmission { get; set; }
+
         internal NetworkPlayers(NetworkSession session)
         {
             _session = session;
@@ -70,6 +85,13 @@ namespace BIG.Unity.Networking
         }
 
         public bool TryGet(PlayerId playerId, out NetworkPlayer player) => _players.TryGetValue(playerId, out player);
+
+        /// <summary>
+        /// Every machine: which player a connection id belongs to (from spawned avatars). Kept until this machine's client
+        /// stops, so it still answers while objects are torn down (host migration capture). None when unknown.
+        /// </summary>
+        public PlayerId PlayerIdOfClient(int clientId) =>
+            _playerIdsByClient.TryGetValue(clientId, out var playerId) ? playerId : PlayerId.None;
 
         public bool TryGetIdentity(NetworkConnection connection, out Identity identity) =>
             _identitiesByConnection.TryGetValue(connection.ClientId, out identity);
@@ -86,9 +108,13 @@ namespace BIG.Unity.Networking
             bool isNew = !_players.TryGetValue(player.Id, out var existing) || existing != player;
             _players[player.Id] = player;
             if (player.IsOwner) Local = player;
+            if (player.Owner.IsValid) _playerIdsByClient[player.OwnerId] = player.Id;
 
             if (isNew)
+            {
                 Events.Raise(new NetworkPlayerJoined(player));
+                NetworkItem.OnAvatarSpawned(player); // Already holding something (late join, host migration).
+            }
         }
 
         internal void Unregister(NetworkPlayer player) => Unregister(player.Id, player);
@@ -116,7 +142,9 @@ namespace BIG.Unity.Networking
             {
                 PlayerId = platform.LocalPlayer.Value,
                 DisplayName = platform.LocalDisplayName,
-                Version = NetworkVersion.Current
+                Version = NetworkVersion.Current,
+                HostAddress = _session.Provider.GetHostAddress(),
+                Password = _session.JoinPassword
             });
         }
 
@@ -138,6 +166,18 @@ namespace BIG.Unity.Networking
                 return;
             }
 
+            // Password first (the host's own client never needs one), then the lobby's rules (bans, match in progress).
+            var verdict = !connection.IsLocalClient && !_session.ServerAcceptsPassword(hello.Password ?? "")
+                ? DisconnectReason.WrongPassword
+                : ServerAdmission?.Invoke(playerId) ?? DisconnectReason.None;
+            if (verdict != DisconnectReason.None)
+            {
+                connection.Log($"[Network] Refusing {hello.DisplayName} ({playerId}): {verdict}.");
+                _session.NetworkManager.ServerManager.Broadcast(connection, new SessionEndBroadcast { Reason = (byte)verdict });
+                connection.Disconnect(false); // Not immediately — the reason goes out first.
+                return;
+            }
+
             // Same player on a new connection (reconnect before the old one timed out) — the new one wins.
             if (_identitiesByPlayer.TryGetValue(playerId, out var stale))
             {
@@ -145,7 +185,8 @@ namespace BIG.Unity.Networking
                 stale.Connection.Disconnect(true);
             }
 
-            var identity = new Identity(connection, playerId, string.IsNullOrEmpty(hello.DisplayName) ? playerId.Value : hello.DisplayName);
+            var identity = new Identity(connection, playerId, string.IsNullOrEmpty(hello.DisplayName) ? playerId.Value : hello.DisplayName,
+                hello.HostAddress ?? "");
             _identitiesByConnection[connection.ClientId] = identity;
             _identitiesByPlayer[playerId] = identity;
             _session.Sessions.SetMemberCount(_identitiesByConnection.Count);
@@ -191,6 +232,7 @@ namespace BIG.Unity.Networking
             {
                 // Despawn callbacks normally unregister everything; this catches objects destroyed without them.
                 _players.Clear();
+                _playerIdsByClient.Clear();
                 Local = null;
             }
         }

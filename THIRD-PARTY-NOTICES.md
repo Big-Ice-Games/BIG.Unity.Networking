@@ -8,7 +8,16 @@
   **Games shipping this package must reproduce that notice in their documentation / credits** (binary redistribution clause).
   Its `System.Memory` / `System.Numerics.Vectors` dependencies are provided by Unity's .NET Standard 2.1 shims.
 
+- **FishySteamworks 4.1.1** (Steam transport for FishNet) — `Runtime/Steam/FishySteamworks/`,
+  https://github.com/FirstGearGames/FishySteamworks. License: BSD-2-Clause, Copyright (c) 2022 Benjamin Berwick —
+  full text in [Runtime/Steam/FishySteamworks/LICENSE.txt](Runtime/Steam/FishySteamworks/LICENSE.txt).
+  Modified: a public `PeerToPeer` property added (marked `[BIG.Unity.Networking]`). Binary redistribution must
+  reproduce the notice (credits).
+
 ## Required, installed separately by the user
+
+- **Steamworks.NET** (optional — Steam provider only) — https://github.com/rlabrecque/Steamworks.NET — MIT.
+  Ships Valve's `steam_api` libraries, which are covered by the Steamworks SDK license (Steam partners).
 
 - **FishNet: Networking Evolved** — Big Ice Games fork https://github.com/Big-Ice-Games/FishNet (branch `big`) of
   https://github.com/FirstGearGames/FishNet — free, see its LICENSE.txt.

@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="DevOverlayStyle.uss" />
+    <ui:VisualElement name="overlay" class="big-overlay">
+        <ui:VisualElement name="topbar" class="big-overlay__topbar">
+            <ui:Label text="BIG Networking" class="big-overlay__title" />
+            <ui:VisualElement class="big-spacer" />
+            <ui:Button name="expand-all" text="+" tooltip="Expand all modules" class="big-icon-button" />
+            <ui:Button name="collapse-all" text="–" tooltip="Collapse all modules" class="big-icon-button" />
+            <ui:Button name="dock" text="◄►" tooltip="Dock left / right" class="big-icon-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="viewport" class="big-overlay__viewport">
+            <ui:VisualElement name="modules" class="big-overlay__modules" />
+        </ui:VisualElement>
+        <ui:Label name="hint" class="big-overlay__hint" />
+    </ui:VisualElement>
+</ui:UXML>

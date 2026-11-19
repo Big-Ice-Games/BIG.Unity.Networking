@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="module" class="big-module">
+        <ui:VisualElement name="header" class="big-module__header">
+            <ui:Label name="arrow" text="▼" class="big-module__arrow" />
+            <ui:Label name="title" class="big-module__title" />
+            <ui:VisualElement class="big-spacer" />
+            <ui:Label name="badge" class="big-module__badge" />
+        </ui:VisualElement>
+        <ui:VisualElement name="body" class="big-module__body" />
+    </ui:VisualElement>
+</ui:UXML>

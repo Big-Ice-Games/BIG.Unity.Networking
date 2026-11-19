@@ -1,0 +1,39 @@
+{
+    "name": "BIG.Unity.Networking.Steam",
+    "rootNamespace": "BIG.Unity.Networking.Steam",
+    "references": [
+        "BIG.Unity",
+        "BIG.Unity.Networking",
+        "FishNet.Runtime",
+        "com.rlabrecque.steamworks.net"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "LinuxStandalone64",
+        "macOSStandalone",
+        "WindowsStandalone32",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "BIG_FISHNET",
+        "BIG_STEAMWORKS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.firstgeargames.fishnet",
+            "expression": "",
+            "define": "BIG_FISHNET"
+        },
+        {
+            "name": "com.rlabrecque.steamworks.net",
+            "expression": "",
+            "define": "BIG_STEAMWORKS"
+        }
+    ],
+    "noEngineReferences": false
+}

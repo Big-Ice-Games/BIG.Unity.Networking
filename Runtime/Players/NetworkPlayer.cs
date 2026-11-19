@@ -1,6 +1,7 @@
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using UnityEngine;
 
 namespace BIG.Unity.Networking
 {
@@ -8,9 +9,13 @@ namespace BIG.Unity.Networking
     /// Put on the player prefab (next to its NetworkObject). Carries the stable <see cref="PlayerId"/> and
     /// display name, assigned by the SERVER (<see cref="PlayerSpawner"/>) — never by the client itself.
     /// Registered in <see cref="NetworkPlayers"/> on every machine as soon as the id is known.
+    /// After a host migration the owner puts its respawned avatar back where it was (client authority: the owner knows).
     /// </summary>
     public sealed class NetworkPlayer : NetworkBehaviour
     {
+        [SerializeField, Tooltip("Host migration: the owner moves its respawned avatar back to where it was before the host dropped.")]
+        private bool _keepPoseOnHostMigration = true;
+
         private readonly SyncVar<string> _playerId = new SyncVar<string>();
         private readonly SyncVar<string> _displayName = new SyncVar<string>();
 
@@ -45,6 +50,19 @@ namespace BIG.Unity.Networking
         public override void OnStartClient()
         {
             NetworkSession.Instance.Players.Register(this);
+
+            if (IsOwner && _keepPoseOnHostMigration &&
+                NetworkSession.Instance.TryTakePoseToRestore(out var position, out var rotation))
+            {
+                transform.SetPositionAndRotation(position, rotation);
+                Physics.SyncTransforms(); // CharacterController / Rigidbody pick the new pose up right away.
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (_keepPoseOnHostMigration && IsOwner && IsClientInitialized)
+                NetworkSession.Instance.RememberLocalPose(transform);
         }
 
         public override void OnStopClient()

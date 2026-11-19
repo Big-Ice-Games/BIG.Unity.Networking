@@ -12,8 +12,6 @@ namespace BIG.Unity.Networking
     /// </summary>
     public sealed class NetworkSessionDebugKeys : MonoBehaviour
     {
-        [SerializeField] private int _maxPlayers = 4;
-
         private void Update()
         {
             if (Pressed(KeyCodeHost)) Host();
@@ -22,7 +20,7 @@ namespace BIG.Unity.Networking
         }
 
         [ContextMenu("Host")]
-        public void Host() => NetworkSession.Instance.Host(new SessionSettings { MaxPlayers = _maxPlayers });
+        public void Host() => NetworkSession.Instance.Host(); // Room defaults from the Network Config.
 
         [ContextMenu("Search and join first")]
         public void JoinFirst()

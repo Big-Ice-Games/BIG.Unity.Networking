@@ -1,0 +1,263 @@
+/* BIG.Unity.Networking — developer overlay. All visuals live here; code only places elements and fills data.
+   Panel has no theme: every control used by DevUI is styled below. */
+
+
+/* ---------- Window ---------- */
+
+.big-overlay {
+    --big-bg: rgba(16, 18, 24, 0.86);
+    --big-card: rgba(255, 255, 255, 0.045);
+    --big-card-hover: rgba(255, 255, 255, 0.08);
+    --big-line: rgba(255, 255, 255, 0.09);
+    --big-text: rgb(226, 230, 238);
+    --big-muted: rgb(140, 148, 162);
+    --big-accent: rgb(96, 165, 250);
+    --big-good: rgb(74, 222, 128);
+    --big-warn: rgb(251, 191, 36);
+    --big-bad: rgb(248, 113, 113);
+    color: var(--big-text);
+    font-size: 15px;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    width: 400px;
+    background-color: var(--big-bg);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: var(--big-line);
+    padding: 8px;
+}
+
+.big-overlay--right {
+    left: auto;
+    right: 12px;
+}
+
+.big-overlay__topbar {
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 4px 8px 6px;
+    border-bottom-width: 1px;
+    border-color: var(--big-line);
+    margin-bottom: 6px;
+}
+
+.big-overlay__title {
+    -unity-font-style: bold;
+    font-size: 16px;
+    color: var(--big-accent);
+}
+
+/* No theme on this panel: the document root isn't stretched by Unity's theme — do it here (and in code). */
+.big-overlay-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Own scrolling (mouse wheel moves .big-overlay__modules) — no ScrollView, it needs the theme's styles. */
+.big-overlay__viewport {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.big-overlay__modules {
+    flex-shrink: 0;
+}
+
+.big-overlay__hint {
+    font-size: 12px;
+    color: var(--big-muted);
+    -unity-text-align: middle-center;
+    padding-top: 4px;
+}
+
+.big-spacer {
+    flex-grow: 1;
+}
+
+/* ---------- Module ---------- */
+
+.big-module {
+    background-color: var(--big-card);
+    border-radius: 7px;
+    margin-bottom: 6px;
+    overflow: hidden;
+}
+
+.big-module__header {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 8px;
+}
+
+.big-module__header:hover {
+    background-color: var(--big-card-hover);
+}
+
+.big-module__arrow {
+    width: 16px;
+    font-size: 11px;
+    color: var(--big-muted);
+}
+
+.big-module__title {
+    -unity-font-style: bold;
+}
+
+.big-module__badge {
+    font-size: 12px;
+    padding: 1px 7px;
+    border-radius: 9px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--big-muted);
+}
+
+.big-module__badge--good { background-color: rgba(74, 222, 128, 0.16); color: var(--big-good); }
+.big-module__badge--warn { background-color: rgba(251, 191, 36, 0.16); color: var(--big-warn); }
+.big-module__badge--bad  { background-color: rgba(248, 113, 113, 0.18); color: var(--big-bad); }
+
+.big-module__body {
+    padding: 2px 10px 9px 10px;
+}
+
+/* ---------- Content ---------- */
+
+.big-text {
+    white-space: normal;
+    padding: 1px 0;
+}
+
+.big-text--good  { color: var(--big-good); }
+.big-text--warn  { color: var(--big-warn); }
+.big-text--bad   { color: var(--big-bad); }
+.big-text--muted { color: var(--big-muted); font-size: 13px; }
+
+.big-heading {
+    -unity-font-style: bold;
+    font-size: 13px;
+    color: var(--big-muted);
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
+.big-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.big-row > .big-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.big-row > .big-button {
+    flex-shrink: 0;
+}
+
+.big-section {
+}
+
+.big-list__item {
+    padding: 2px 0;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ---------- Buttons ---------- */
+
+.big-button, .big-icon-button {
+    background-color: rgba(96, 165, 250, 0.16);
+    border-width: 1px;
+    border-color: rgba(96, 165, 250, 0.35);
+    border-radius: 5px;
+    color: var(--big-text);
+    padding: 3px 10px;
+    margin: 2px 2px;
+    -unity-text-align: middle-center;
+    min-height: 26px;
+    flex-grow: 1;
+}
+
+.big-button:hover, .big-icon-button:hover {
+    background-color: rgba(96, 165, 250, 0.32);
+}
+
+.big-button:active, .big-icon-button:active {
+    background-color: rgba(96, 165, 250, 0.5);
+}
+
+.big-button:disabled {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: var(--big-line);
+    color: rgb(100, 106, 118);
+}
+
+.big-icon-button {
+    flex-grow: 0;
+    min-width: 30px;
+    min-height: 24px;
+    padding: 0 6px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: var(--big-line);
+}
+
+/* ---------- Text fields ---------- */
+
+.big-field-label {
+    width: 80px;
+    color: var(--big-muted);
+    font-size: 13px;
+}
+
+.big-field {
+    flex-grow: 1;
+    margin: 2px 2px;
+}
+
+.big-field .unity-base-text-field__input {
+    background-color: rgba(0, 0, 0, 0.35);
+    border-width: 1px;
+    border-color: var(--big-line);
+    border-radius: 5px;
+    padding: 3px 7px;
+    min-height: 26px;
+    color: var(--big-text);
+    --unity-cursor-color: var(--big-text);
+    --unity-selection-color: rgba(96, 165, 250, 0.45);
+}
+
+.big-field:focus .unity-base-text-field__input {
+    border-color: var(--big-accent);
+}
+
+.big-field .unity-text-element--placeholder {
+    color: var(--big-muted);
+}
+
+/* ---------- Level bars ---------- */
+
+.big-bar {
+    height: 8px;
+    min-width: 60px;
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    margin: 0 4px;
+    overflow: hidden;
+}
+
+.big-bar__fill {
+    height: 100%;
+    width: 0;
+    background-color: var(--big-good);
+    border-radius: 4px;
+}
+
+.big-bar__fill--hot {
+    background-color: var(--big-warn);
+}

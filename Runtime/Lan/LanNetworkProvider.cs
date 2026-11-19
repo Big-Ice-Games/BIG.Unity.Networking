@@ -29,6 +29,9 @@ namespace BIG.Unity.Networking.Lan
         public float BeaconInterval = 1f;
         [Tooltip("How long Search() listens for beacons.")]
         public float SearchDuration = 1.5f;
+        [Tooltip("Seconds without data before a connection counts as lost — how fast a crashed host is noticed (host migration) " +
+                 "and a crashed client is dropped. 0 = never (Tugboat's own default is 30 min, handy only for breakpoints).")]
+        public float ConnectionTimeout = 6f;
 
         public override INetworkProvider CreateProvider() => new LanProvider(this);
     }
@@ -78,6 +81,9 @@ namespace BIG.Unity.Networking.Lan
 
             if (_tugboat == null)
                 throw new InvalidOperationException("[Network] LAN provider needs a Tugboat transport on the NetworkManager (directly or inside Multipass).");
+
+            _tugboat.SetTimeout(_settings.ConnectionTimeout, asServer: true);
+            _tugboat.SetTimeout(_settings.ConnectionTimeout, asServer: false);
         }
 
         public void PrepareHost(SessionSettings settings)
