@@ -85,7 +85,8 @@ namespace BIG.Unity.Networking
             _networkTransform.SetExtrapolation(_profile.Extrapolation);
 
             // FishNet despawns what a disconnecting player owns — something players can take must stay (back to the host).
-            if (CanBeTaken) PreventDespawnOnDisconnect(GetComponent<NetworkObject>());
+            // The NetworkObject may sit on a parent: a rope link, a ragdoll limb.
+            if (CanBeTaken) PreventDespawnOnDisconnect(GetComponentInParent<NetworkObject>(true));
 
             if (_rigidbody != null) _rigidbody.isKinematic = true; // Until we know who simulates.
         }
