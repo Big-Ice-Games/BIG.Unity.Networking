@@ -323,7 +323,7 @@ all of it should look the same after the migration.
 
 ## Making networked objects
 
-**Make Networked** — right click an object in the Hierarchy (or a prefab in the Project window) > *BIG Networking >
+**Make Networked** — right click an object in the Hierarchy (or a prefab in the Project window) > *BIG > Networking >
 Make Networked*:
 
 | Preset | Adds | For |

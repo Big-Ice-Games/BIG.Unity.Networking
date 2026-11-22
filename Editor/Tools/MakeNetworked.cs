@@ -30,13 +30,13 @@ namespace BIG.Unity.Networking.Editor
     /// with the preset's profile, the behaviours (push / carry / collect / interact), NetworkMigratable, Rigidbody /
     /// collider, NetworkPlayer + NetworkInteractor — whatever the preset needs — then gives scene objects their SceneId and
     /// puts prefabs on FishNet's spawnable list. Undoable.
-    /// Hierarchy / scene: right click > BIG Networking > Make Networked. Prefab assets: Assets > BIG Networking > Make Networked.
+    /// Hierarchy / scene: right click > BIG > Networking > Make Networked. Prefab assets: Assets > BIG > Networking > Make Networked.
     /// </summary>
     public static class MakeNetworked
     {
         private const string PROFILES_FOLDER = "Assets/BIG.Networking/Profiles";
-        private const string SCENE_MENU = "GameObject/BIG Networking/Make Networked/";
-        private const string PREFAB_MENU = "Assets/BIG Networking/Make Networked/";
+        private const string SCENE_MENU = "GameObject/BIG/Networking/Make Networked/";
+        private const string PREFAB_MENU = "Assets/BIG/Networking/Make Networked/";
 
         private const string PLAYER = "Player";
         private const string HOST = "Host-controlled (AI, platform)";
